@@ -7,6 +7,8 @@ import {
   DraggableLocation,
   DraggingStyle,
   NotDraggingStyle,
+  DraggableStateSnapshot,
+  DroppableProvided,
 } from 'react-beautiful-dnd';
 import './App.css';
 // import { CHARACTERS } from "./caractersData";
@@ -58,24 +60,63 @@ const getItemStyle = (
   isDragging: boolean,
   draggingOver: string | undefined,
   draggableStyle: DraggingStyle | NotDraggingStyle | undefined
-): React.CSSProperties | undefined => ({
-  // some basic styles to make the items look a bit nicer
-  userSelect: 'none',
-  padding: grid * 2,
-  margin: `0 0 ${grid}px 0`,
+): React.CSSProperties | undefined => {
+  const cardStyle =
+    draggingOver === '0' ? 'green' : draggingOver === '1' ? 'blue' : 'grey';
 
-  // change background colour if dragging
-  background: isDragging ? (draggingOver === '0' ? 'green' : 'blue') : 'grey',
+  return {
+    // some basic styles to make the items look a bit nicer
+    userSelect: 'none',
+    padding: grid * 2,
+    margin: `0 0 ${grid}px 0`,
 
-  // styles we need to apply on draggables
-  ...draggableStyle,
-});
+    // change background colour if dragging
+    background: isDragging ? cardStyle : 'grey',
+
+    // styles we need to apply on draggables
+    ...draggableStyle,
+  };
+};
 
 const getListStyle = (isDraggingOver: boolean) => ({
   background: isDraggingOver ? 'lightblue' : 'lightgrey',
   padding: grid,
   width: 250,
 });
+
+const renderDraggingCard = (snapshot: DraggableStateSnapshot) => {
+  if (!snapshot.isDragging) {
+    return null;
+  }
+
+  const draggingOver = snapshot.draggingOver;
+  switch (draggingOver) {
+    case '0':
+      return <div>LEFT {snapshot.draggingOver}</div>;
+    case '1':
+      return <div>RIGHT {snapshot.draggingOver}</div>;
+    default:
+      return <div>None</div>;
+  }
+};
+
+const renderCard = (
+  providedRoot: DroppableProvided,
+  item: Item,
+  onClickDelete: () => void
+) => {
+  const droppableId = providedRoot.droppableProps['data-rbd-droppable-id'];
+  const cardStyle = droppableId === '0' ? '-left' : '-right';
+
+  return (
+    <div className={`Card ${cardStyle}`}>
+      {item.content}
+      <button type="button" onClick={onClickDelete}>
+        delete
+      </button>
+    </div>
+  );
+};
 
 function App() {
   const [state, setState] = useState([getItems(10), getItems(5, 10)]);
@@ -152,39 +193,15 @@ function App() {
                             provided.draggableProps.style
                           )}
                         >
-                          {snapshot.isDragging ? (
-                            snapshot.draggingOver === '0' ? (
-                              <div>LEFT {snapshot.draggingOver}</div>
-                            ) : snapshot.draggingOver === '1' ? (
-                              <div>RIGHT {snapshot.draggingOver}</div>
-                            ) : (
-                              <div>None</div>
-                            )
-                          ) : (
-                            <div
-                              className={`Card ${
-                                providedRoot.droppableProps[
-                                  'data-rbd-droppable-id'
-                                ] === '0'
-                                  ? '-left'
-                                  : '-right'
-                              }`}
-                            >
-                              {item.content}
-                              <button
-                                type="button"
-                                onClick={() => {
-                                  const newState = [...state];
-                                  newState[ind].splice(index, 1);
-                                  setState(
-                                    newState.filter((group) => group.length)
-                                  );
-                                }}
-                              >
-                                delete
-                              </button>
-                            </div>
-                          )}
+                          {snapshot.isDragging
+                            ? renderDraggingCard(snapshot)
+                            : renderCard(providedRoot, item, () => {
+                                const newState = [...state];
+                                newState[ind].splice(index, 1);
+                                setState(
+                                  newState.filter((group) => group.length)
+                                );
+                              })}
                         </div>
                       )}
                     </Draggable>
