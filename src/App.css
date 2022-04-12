@@ -1,3 +1,24 @@
 .App {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
   text-align: center;
+}
+
+.Board {
+  display: flex;
+  justify-content: center;
+}
+
+.Card {
+  display: flex;
+  justify-content: space-around;
+}
+
+.Card.-left {
+  background-color: green;
+}
+
+.Card.-right {
+  background-color: blue;
 }
